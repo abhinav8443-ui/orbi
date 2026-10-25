@@ -60,6 +60,7 @@ import {
 import QRCode from 'qrcode';
 
 const CLOUD_URL = 'https://abhinav8443-ui.github.io/orbi/';
+const APK_RELEASE_URL = 'https://github.com/abhinav8443-ui/orbi/releases/download/v1.0.0/orbi.apk';
 
 // Helper: Format seconds to M:SS
 function formatTime(seconds) {
@@ -1256,10 +1257,12 @@ export default function App() {
 
               {/* 4. Download Orbi APK */}
               <a
-                href="./orbi.apk"
+                href={APK_RELEASE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 download="Orbi-Music.apk"
                 className="flex items-center justify-center gap-1.5 w-full py-1 px-3 rounded-lg font-medium text-[11px] text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
-                title="Download compiled Android APK directly"
+                title="Download compiled Android APK directly from GitHub Releases"
               >
                 <Download className="w-3 h-3 text-teal-400" />
                 <span>Download Android APK</span>
@@ -1451,10 +1454,12 @@ export default function App() {
 
                     {/* Action 4: Download Android APK */}
                     <a
-                      href="./orbi.apk"
+                      href={APK_RELEASE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       download="Orbi-Music.apk"
                       className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs transition-colors hover:scale-105 active:scale-95"
-                      title="Download the compiled Android APK directly"
+                      title="Download the compiled Android APK directly from GitHub Releases"
                     >
                       <Download className="w-3.5 h-3.5 text-teal-300" />
                       <span>Download APK</span>
@@ -2388,9 +2393,12 @@ export default function App() {
 
             <div className="flex items-center justify-between gap-2 pt-1">
               <a
-                href="./orbi.apk"
+                href={APK_RELEASE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 download="Orbi-Music.apk"
                 className="flex-1 py-2 px-3 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                title="Download official compiled Android APK from GitHub Releases"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download Android APK</span>
