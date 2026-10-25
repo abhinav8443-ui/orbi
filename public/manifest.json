@@ -1,0 +1,25 @@
+{
+  "name": "Orbi Music Player",
+  "short_name": "Orbi",
+  "description": "Personal Spotify-like Music Player with 100% offline playback, synced lyrics, and 5-band audio equalizer",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06191f",
+  "theme_color": "#06191f",
+  "icons": [
+    {
+      "src": "./covers/yeat-money-so-big.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "./covers/yeat-money-so-big.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

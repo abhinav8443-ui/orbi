@@ -1,0 +1,8 @@
+{
+  "appId": "com.orbi.musicplayer",
+  "appName": "Orbi Music",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
