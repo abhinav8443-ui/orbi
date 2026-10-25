@@ -57,6 +57,9 @@ import {
   getOfflineCachedCount,
   isTrackCachedOffline
 } from './utils/db';
+import QRCode from 'qrcode';
+
+const CLOUD_URL = 'https://abhinav8443-ui.github.io/orbi/';
 
 // Helper: Format seconds to M:SS
 function formatTime(seconds) {
@@ -147,8 +150,27 @@ export default function App() {
     port: 5173
   });
   const [showQrModal, setShowQrModal] = useState(false);
-  const [qrType, setQrType] = useState('local'); // 'local'
-  const [copiedType, setCopiedType] = useState(''); // 'local' | 'apk'
+  const [qrType, setQrType] = useState('cloud'); // 'cloud' | 'local'
+  const [copiedType, setCopiedType] = useState(''); // 'cloud' | 'local' | 'apk'
+  const [qrDataUrl, setQrDataUrl] = useState('');
+
+  // Dynamically generate QR code in-browser (works offline and on GitHub Pages with 0 API calls)
+  useEffect(() => {
+    const targetUrl = qrType === 'cloud' 
+      ? CLOUD_URL 
+      : (serverInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : CLOUD_URL));
+
+    QRCode.toDataURL(targetUrl, {
+      margin: 1,
+      width: 256,
+      color: {
+        dark: '#14b8a6',
+        light: '#06191f'
+      }
+    }).then((url) => {
+      setQrDataUrl(url);
+    }).catch(() => {});
+  }, [qrType, serverInfo.localUrl]);
 
   // --- EQUALIZER STATE ---
   const [eqGains, setEqGains] = useState([0, 0, 0, 0, 0]);
@@ -181,7 +203,7 @@ export default function App() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
         setCopiedType(type);
-        showToast(`Copied Local Wi-Fi link!`);
+        showToast(type === 'cloud' ? 'Copied 24/7 Cloud Link!' : 'Copied Local Wi-Fi link!');
         setTimeout(() => setCopiedType(''), 2500);
       }).catch(() => {
         showToast(`Link: ${url}`);
@@ -1222,9 +1244,19 @@ export default function App() {
                 <span>{isAppInstalled ? 'Orbi App Installed' : 'Install Orbi App'}</span>
               </button>
 
-              {/* 3. Download Orbi APK */}
+              {/* 3. 24/7 Cloud Link (No Laptop Needed) */}
+              <button
+                onClick={() => copyLink(CLOUD_URL, 'cloud')}
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded-lg font-semibold text-xs bg-white/10 hover:bg-white/15 text-white transition-colors"
+                title="Copy 24/7 cloud link (works anywhere without laptop)"
+              >
+                <Globe className="w-3.5 h-3.5 text-teal-400" />
+                <span>{copiedType === 'cloud' ? '24/7 Link Copied!' : 'Copy 24/7 Cloud Link'}</span>
+              </button>
+
+              {/* 4. Download Orbi APK */}
               <a
-                href="/orbi.apk"
+                href="./orbi.apk"
                 download="Orbi-Music.apk"
                 className="flex items-center justify-center gap-1.5 w-full py-1 px-3 rounded-lg font-medium text-[11px] text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                 title="Download compiled Android APK directly"
@@ -1233,7 +1265,7 @@ export default function App() {
                 <span>Download Android APK</span>
               </a>
 
-              {/* 4. Scan QR Code Button */}
+              {/* 5. Scan QR Code Button */}
               <button
                 onClick={() => setShowQrModal(true)}
                 className="flex items-center justify-center gap-1.5 w-full py-1 px-3 rounded-lg text-[11px] font-medium text-teal-300 hover:text-white hover:bg-white/5 transition-colors"
@@ -1401,9 +1433,25 @@ export default function App() {
                       <span>{isAppInstalled ? 'Orbi App Installed' : 'Install Orbi App'}</span>
                     </button>
 
-                    {/* Action 3: Download Android APK */}
+                    {/* Action 3: 24/7 Cloud Link (Live Anywhere) */}
+                    <div className="inline-flex items-center bg-black/50 border border-teal-500/30 rounded-full p-1 pl-3.5 gap-2 text-xs text-white">
+                      <Globe className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
+                      <span className="font-mono text-teal-200/90 truncate max-w-[140px] sm:max-w-[200px]" title={CLOUD_URL}>
+                        abhinav8443-ui.github.io/orbi
+                      </span>
+                      <button
+                        onClick={() => copyLink(CLOUD_URL, 'cloud')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/20 hover:bg-teal-500/35 text-teal-300 font-semibold transition-colors"
+                        title="Copy 24/7 Cloud Link for phone access anytime"
+                      >
+                        {copiedType === 'cloud' ? <Check className="w-3.5 h-3.5 text-teal-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedType === 'cloud' ? 'Copied!' : 'Copy 24/7'}</span>
+                      </button>
+                    </div>
+
+                    {/* Action 4: Download Android APK */}
                     <a
-                      href="/orbi.apk"
+                      href="./orbi.apk"
                       download="Orbi-Music.apk"
                       className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold text-xs transition-colors hover:scale-105 active:scale-95"
                       title="Download the compiled Android APK directly"
@@ -1412,23 +1460,25 @@ export default function App() {
                       <span>Download APK</span>
                     </a>
 
-                    {/* Action 4: Local Wi-Fi Network Link */}
-                    <div className="inline-flex items-center bg-black/50 border border-teal-500/30 rounded-full p-1 pl-3.5 gap-2 text-xs text-white">
-                      <Wifi className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
-                      <span className="font-mono text-teal-200/80 truncate max-w-[120px] sm:max-w-[160px]">
-                        {serverInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173')}
-                      </span>
-                      <button
-                        onClick={() => copyLink(serverInfo.localUrl || window.location.origin, 'local')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/20 hover:bg-teal-500/35 text-teal-300 font-semibold transition-colors"
-                        title="Copy Local Wi-Fi link"
-                      >
-                        {copiedType === 'local' ? <Check className="w-3.5 h-3.5 text-teal-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedType === 'local' ? 'Copied!' : 'Copy Wi-Fi'}</span>
-                      </button>
-                    </div>
+                    {/* Action 5: Local Wi-Fi Network Link */}
+                    {serverInfo.localUrl && (
+                      <div className="inline-flex items-center bg-black/50 border border-teal-500/30 rounded-full p-1 pl-3.5 gap-2 text-xs text-white">
+                        <Wifi className="w-3.5 h-3.5 text-teal-400 flex-shrink-0" />
+                        <span className="font-mono text-teal-200/80 truncate max-w-[120px] sm:max-w-[160px]">
+                          {serverInfo.localUrl}
+                        </span>
+                        <button
+                          onClick={() => copyLink(serverInfo.localUrl, 'local')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/20 hover:bg-teal-500/35 text-teal-300 font-semibold transition-colors"
+                          title="Copy Local Wi-Fi link"
+                        >
+                          {copiedType === 'local' ? <Check className="w-3.5 h-3.5 text-teal-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedType === 'local' ? 'Copied!' : 'Copy Wi-Fi'}</span>
+                        </button>
+                      </div>
+                    )}
 
-                    {/* Action 5: Scan QR Code Button */}
+                    {/* Action 6: Scan QR Code Button */}
                     <button
                       onClick={() => setShowQrModal(true)}
                       className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 border border-teal-500/30 text-white font-bold text-xs transition-colors shadow-md hover:scale-105 active:scale-95"
@@ -1447,11 +1497,17 @@ export default function App() {
                     className="w-36 h-36 rounded-3xl bg-gradient-to-tr from-[#09262f] to-[#04161b] border-2 border-teal-500/40 p-2 shadow-2xl rotate-3 hover:rotate-0 transition-transform cursor-pointer flex flex-col items-center justify-center group"
                     title="Click to view QR Code"
                   >
-                    <img
-                      src={`/api/qr-code?url=${encodeURIComponent(serverInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'))}`}
-                      alt="Scan to open on phone"
-                      className="w-24 h-24 rounded-lg group-hover:scale-105 transition-transform"
-                    />
+                    {qrDataUrl ? (
+                      <img
+                        src={qrDataUrl}
+                        alt="Scan to open on phone"
+                        className="w-24 h-24 rounded-lg group-hover:scale-105 transition-transform object-contain"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-400">
+                        <QrCode className="w-10 h-10 animate-pulse" />
+                      </div>
+                    )}
                     <span className="text-[10px] font-bold text-teal-300 mt-1 flex items-center gap-1">
                       <QrCode className="w-3 h-3" /> Connect Phone
                     </span>
@@ -2240,8 +2296,30 @@ export default function App() {
               </div>
               <h3 className="text-xl font-black text-white">Connect Phone & Play 100% Offline</h3>
               <p className="text-xs text-teal-200/70 max-w-sm">
-                Follow these 4 simple steps to have the entire library on your phone forever, even with zero internet.
+                Access your music 24/7 on your phone with zero laptop required, and save the vault for offline playback.
               </p>
+            </div>
+
+            {/* Network Selector Tabs */}
+            <div className="flex p-1 bg-black/40 rounded-xl border border-teal-500/20 text-xs font-bold">
+              <button
+                onClick={() => setQrType('cloud')}
+                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  qrType === 'cloud' ? 'bg-teal-500 text-black shadow' : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>24/7 Cloud (Anywhere)</span>
+              </button>
+              <button
+                onClick={() => setQrType('local')}
+                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  qrType === 'local' ? 'bg-teal-500 text-black shadow' : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                <Wifi className="w-3.5 h-3.5" />
+                <span>Local Wi-Fi</span>
+              </button>
             </div>
 
             {/* 4-Step Offline Walkthrough */}
@@ -2249,25 +2327,25 @@ export default function App() {
               <div className="flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">1</span>
                 <p className="text-gray-300">
-                  <span className="text-white font-bold">Connect Phone:</span> Make sure your phone is connected to the same home Wi-Fi network.
+                  <span className="text-white font-bold">Open Everywhere:</span> Scan the QR below with your phone camera or open the link directly on mobile.
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">2</span>
                 <p className="text-gray-300">
-                  <span className="text-white font-bold">Scan QR:</span> Point your phone camera at the QR code below or open the URL in Chrome.
+                  <span className="text-white font-bold">Install Orbi App:</span> Tap the <span className="text-teal-300 font-semibold">"Install Orbi App"</span> button (or Chrome menu <span className="text-teal-300">⋮</span> &rarr; "Install app").
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">3</span>
                 <p className="text-gray-300">
-                  <span className="text-white font-bold">Install Orbi App:</span> Tap the <span className="text-teal-300 font-semibold">"Install Orbi App"</span> button (or Chrome menu <span className="text-teal-300">⋮</span> &rarr; "Add to Home screen").
+                  <span className="text-white font-bold">Save Offline Vault:</span> Inside the app on your phone, tap <span className="text-teal-300 font-semibold">"Save All to Phone"</span> to store all 139 songs locally.
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center flex-shrink-0 text-[11px]">4</span>
                 <p className="text-gray-300">
-                  <span className="text-white font-bold">Save Offline Vault:</span> Tap <span className="text-teal-300 font-semibold">"Save All to Phone"</span>. Once finished, turn your laptop OFF and enjoy music anywhere!
+                  <span className="text-white font-bold">100% Offline Forever:</span> Turn on Airplane mode or turn your laptop OFF — your music keeps playing seamlessly!
                 </p>
               </div>
             </div>
@@ -2275,26 +2353,32 @@ export default function App() {
             {/* QR Code Display Container */}
             <div className="p-4 bg-black/50 border border-teal-500/25 rounded-2xl flex flex-col items-center justify-center shadow-inner">
               {(() => {
-                const targetUrl = serverInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+                const targetUrl = qrType === 'cloud' ? CLOUD_URL : (serverInfo.localUrl || (typeof window !== 'undefined' ? window.location.origin : CLOUD_URL));
                 return (
                   <>
                     <div className="p-3 bg-[#06191f] rounded-xl border border-teal-500/30 shadow-2xl mb-3">
-                      <img
-                        src={`/api/qr-code?url=${encodeURIComponent(targetUrl)}`}
-                        alt="QR Code"
-                        className="w-44 h-44 object-contain"
-                      />
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="QR Code"
+                          className="w-44 h-44 object-contain"
+                        />
+                      ) : (
+                        <div className="w-44 h-44 flex items-center justify-center text-teal-400">
+                          <QrCode className="w-12 h-12 animate-pulse" />
+                        </div>
+                      )}
                     </div>
                     <div className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-[#09262f] rounded-lg border border-teal-500/20">
                       <span className="font-mono text-xs text-teal-300 truncate max-w-[260px]">
                         {targetUrl}
                       </span>
                       <button
-                        onClick={() => copyLink(targetUrl, 'local')}
+                        onClick={() => copyLink(targetUrl, qrType)}
                         className="flex items-center gap-1 px-2.5 py-1 rounded bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 text-xs font-semibold flex-shrink-0"
                       >
-                        {copiedType === 'local' ? <Check className="w-3 h-3 text-teal-400" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedType === 'local' ? 'Copied' : 'Copy'}</span>
+                        {copiedType === qrType ? <Check className="w-3 h-3 text-teal-400" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedType === qrType ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
                   </>
@@ -2304,7 +2388,7 @@ export default function App() {
 
             <div className="flex items-center justify-between gap-2 pt-1">
               <a
-                href="/orbi.apk"
+                href="./orbi.apk"
                 download="Orbi-Music.apk"
                 className="flex-1 py-2 px-3 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
               >
